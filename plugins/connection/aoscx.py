@@ -125,6 +125,8 @@ options:
       environment variable. Version 10.16 is required by the AAA server
       modules (aoscx_aaa_server_group, aoscx_radius_server,
       aoscx_tacacs_server).
+      latest can be used in a specific host or globaly if it is set as an
+      environment variable.
     default: '10.04'
     env:
       - name: ANSIBLE_AOSCX_REST_VERSION
@@ -211,9 +213,12 @@ class Connection(NetworkConnectionBase):
             self.use_proxy = self.get_option("use_proxy")
             rest_version = self.get_option("rest_version")
             if rest_version not in ["10.04", "10.08", "10.09", "10.16"]:
+            if rest_version not in ["10.04", "10.08", "10.09", "latest"]:
                 raise AnsibleConnectionFailure("Invalid REST version: %s"
                                                % rest_version)
-            self.base_url = "https://{0}/rest/v{1}/".format(switchip, rest_version)
+            _prefix = rest_version if rest_version == "latest" \
+                else "v{0}".format(rest_version)
+            self.base_url = "https://{0}/rest/{1}/".format(switchip, _prefix)
             # Set Credentials
             self.__username = username
             self.__password = password
