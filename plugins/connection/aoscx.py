@@ -134,6 +134,9 @@ options:
       environment variable. The MACsec modules require 10.16.
       environment variable. REST version 10.16 is required by the Port Access
       and AAA server modules.
+      Configures REST version, default version is 10.04, but 10.08, 10.09,
+      10.13 or 10.16 can be used in a specific host or globaly if it is set
+      as an environment variable.
     default: '10.04'
     env:
       - name: ANSIBLE_AOSCX_REST_VERSION
@@ -221,6 +224,13 @@ class Connection(NetworkConnectionBase):
             rest_version = self.get_option("rest_version")
             if rest_version not in ["10.04", "10.08", "10.09", "10.16"]:
             if rest_version not in ["10.04", "10.08", "10.09", "latest"]:
+            if rest_version not in [
+                "10.04",
+                "10.08",
+                "10.09",
+                "10.13",
+                "10.16",
+            ]:
                 raise AnsibleConnectionFailure("Invalid REST version: %s"
                                                % rest_version)
             _prefix = rest_version if rest_version == "latest" \
