@@ -80,6 +80,8 @@ options:
     description: >
       Enable Dynamic ARP inspection on the VLAN (the C(arp inspection)
       command).
+    required: false
+    type: bool
   dhcpv4_snooping_enable:
     description: Enable DHCPv4 snooping on the VLAN.
     required: false
@@ -216,6 +218,9 @@ def get_argument_spec():
             "required": False,
         },
         "arp_inspection_enable": {
+            "type": "bool",
+            "required": False,
+        },
         "dhcpv4_snooping_enable": {
             "type": "bool",
             "required": False,
@@ -230,6 +235,8 @@ def get_argument_spec():
         },
         "dhcpv6_snooping_ip_binding_disable": {
             "type": "bool",
+            "required": False,
+        },
         "pvlan_type": {
             "type": "str",
             "required": False,
@@ -389,9 +396,11 @@ def main():
                 != arp_inspection_enable
             )
             vlan.arp_inspection_enable = arp_inspection_enable
+
         for attr, value in dhcp_snooping_attrs.items():
             modified |= getattr(vlan, attr, None) != value
             setattr(vlan, attr, value)
+
         if pvlan_type is not None:
             modified |= getattr(vlan, "pvlan_type", None) != pvlan_type
             vlan.pvlan_type = pvlan_type
