@@ -131,6 +131,7 @@ options:
       environment variable. REST version 10.13 is required for IPFIX modules.
       environment variable. Version 10.16 is required for IP SLA track
       objects.
+      environment variable. The MACsec modules require 10.16.
     default: '10.04'
     env:
       - name: ANSIBLE_AOSCX_REST_VERSION
