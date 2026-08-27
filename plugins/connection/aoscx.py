@@ -129,6 +129,8 @@ options:
       environment variable.
       10.13 can be used in a specific host or globaly if it is set as an
       environment variable. REST version 10.13 is required for IPFIX modules.
+      environment variable. Version 10.16 is required for IP SLA track
+      objects.
     default: '10.04'
     env:
       - name: ANSIBLE_AOSCX_REST_VERSION
