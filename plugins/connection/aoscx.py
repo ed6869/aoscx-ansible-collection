@@ -132,6 +132,8 @@ options:
       environment variable. Version 10.16 is required for IP SLA track
       objects.
       environment variable. The MACsec modules require 10.16.
+      environment variable. REST version 10.16 is required by the Port Access
+      and AAA server modules.
     default: '10.04'
     env:
       - name: ANSIBLE_AOSCX_REST_VERSION
