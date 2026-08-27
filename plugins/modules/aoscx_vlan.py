@@ -80,6 +80,20 @@ options:
     description: >
       Enable Dynamic ARP inspection on the VLAN (the C(arp inspection)
       command).
+  dhcpv4_snooping_enable:
+    description: Enable DHCPv4 snooping on the VLAN.
+    required: false
+    type: bool
+  dhcpv4_snooping_ip_binding_disable:
+    description: Disable the DHCPv4 snooping IP source binding on the VLAN.
+    required: false
+    type: bool
+  dhcpv6_snooping_enable:
+    description: Enable DHCPv6 snooping on the VLAN.
+    required: false
+    type: bool
+  dhcpv6_snooping_ip_binding_disable:
+    description: Disable the DHCPv6 snooping IP source binding on the VLAN.
     required: false
     type: bool
   state:
@@ -184,6 +198,19 @@ def get_argument_spec():
             "required": False,
         },
         "arp_inspection_enable": {
+        "dhcpv4_snooping_enable": {
+            "type": "bool",
+            "required": False,
+        },
+        "dhcpv4_snooping_ip_binding_disable": {
+            "type": "bool",
+            "required": False,
+        },
+        "dhcpv6_snooping_enable": {
+            "type": "bool",
+            "required": False,
+        },
+        "dhcpv6_snooping_ip_binding_disable": {
             "type": "bool",
             "required": False,
         },
@@ -224,6 +251,16 @@ def main():
     vsx_sync = ansible_module.params["vsx_sync"]
     ip_igmp_snooping = ansible_module.params["ip_igmp_snooping"]
     arp_inspection_enable = ansible_module.params["arp_inspection_enable"]
+    dhcp_snooping_attrs = {
+        key: ansible_module.params[key]
+        for key in (
+            "dhcpv4_snooping_enable",
+            "dhcpv4_snooping_ip_binding_disable",
+            "dhcpv6_snooping_enable",
+            "dhcpv6_snooping_ip_binding_disable",
+        )
+        if ansible_module.params[key] is not None
+    }
     state = ansible_module.params["state"]
     try:
         session = get_pyaoscx_session(ansible_module)
@@ -311,6 +348,9 @@ def main():
                 != arp_inspection_enable
             )
             vlan.arp_inspection_enable = arp_inspection_enable
+        for attr, value in dhcp_snooping_attrs.items():
+            modified |= getattr(vlan, attr, None) != value
+            setattr(vlan, attr, value)
 
         if modified:
             try:
