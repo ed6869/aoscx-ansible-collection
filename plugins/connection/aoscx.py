@@ -127,6 +127,8 @@ options:
       aoscx_tacacs_server).
       latest can be used in a specific host or globaly if it is set as an
       environment variable.
+      10.13 can be used in a specific host or globaly if it is set as an
+      environment variable. REST version 10.13 is required for IPFIX modules.
     default: '10.04'
     env:
       - name: ANSIBLE_AOSCX_REST_VERSION
@@ -219,6 +221,13 @@ class Connection(NetworkConnectionBase):
             _prefix = rest_version if rest_version == "latest" \
                 else "v{0}".format(rest_version)
             self.base_url = "https://{0}/rest/{1}/".format(switchip, _prefix)
+            if rest_version not in ["10.04", "10.08", "10.09", "10.13"]:
+                raise AnsibleConnectionFailure(
+                    "Invalid REST version: %s" % rest_version
+                )
+            self.base_url = "https://{0}/rest/v{1}/".format(
+                switchip, rest_version
+            )
             # Set Credentials
             self.__username = username
             self.__password = password
