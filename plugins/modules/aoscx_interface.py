@@ -279,6 +279,17 @@ options:
       Maximum number of DHCPv6 snooping bindings allowed on the port (1-8192).
     type: int
     required: false
+  pvlan_port_type:
+    description: >
+      Private VLAN port type. C(promiscuous) for a port in the primary VLAN,
+      C(secondary) for a port in a secondary VLAN. Set to an empty string to
+      clear the port type (back to a regular port).
+    type: str
+    required: false
+    choices:
+      - promiscuous
+      - secondary
+      - ""
   state:
     description: Create, Update or Delete the Interface.
     type: str
@@ -616,6 +627,12 @@ def get_argument_spec():
             "required": False,
             "default": None,
         },
+        "pvlan_port_type": {
+            "type": "str",
+            "required": False,
+            "default": None,
+            "choices": ["promiscuous", "secondary", ""],
+        },
         "qos_rate": {
             "type": "dict",
             "required": False,
@@ -740,6 +757,7 @@ def main():
     dhcpv6_snooping_max_bindings = ansible_module.params[
         "dhcpv6_snooping_max_bindings"
     ]
+    pvlan_port_type = ansible_module.params["pvlan_port_type"]
 
     configure_speed = ansible_module.params["configure_speed"]
     autoneg = ansible_module.params["autoneg"]
@@ -851,6 +869,15 @@ def main():
             setattr(interface, key, val)
             if key not in interface.config_attrs:
                 interface.config_attrs.append(key)
+    # Private VLAN port type: an empty string clears it (sent as null).
+    if pvlan_port_type is not None:
+        new_pvlan_port_type = (
+            None if pvlan_port_type == "" else pvlan_port_type
+        )
+        if getattr(interface, "pvlan_port_type", None) != new_pvlan_port_type:
+            interface.pvlan_port_type = new_pvlan_port_type
+            if "pvlan_port_type" not in interface.config_attrs:
+                interface.config_attrs.append("pvlan_port_type")
     if vsx_sync:
         if not device.materialized:
             device.get()

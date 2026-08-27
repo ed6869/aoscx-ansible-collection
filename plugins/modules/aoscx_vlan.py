@@ -96,6 +96,24 @@ options:
     description: Disable the DHCPv6 snooping IP source binding on the VLAN.
     required: false
     type: bool
+  pvlan_type:
+    description: >
+      Private VLAN type of this VLAN. C(primary) for the primary VLAN,
+      C(isolated) or C(community) for a secondary VLAN. When not set the VLAN
+      behaves as a regular VLAN.
+    required: false
+    type: str
+    choices:
+      - primary
+      - isolated
+      - community
+  pvlan_association:
+    description: >
+      VLAN id of the primary VLAN this secondary VLAN is associated with.
+      Only applicable to secondary (isolated or community) VLANs. The primary
+      VLAN must already exist.
+    required: false
+    type: int
   state:
     description: Create or update or delete the VLAN.
     required: false
@@ -212,6 +230,13 @@ def get_argument_spec():
         },
         "dhcpv6_snooping_ip_binding_disable": {
             "type": "bool",
+        "pvlan_type": {
+            "type": "str",
+            "required": False,
+            "choices": ["primary", "isolated", "community"],
+        },
+        "pvlan_association": {
+            "type": "int",
             "required": False,
         },
         "state": {
@@ -261,6 +286,8 @@ def main():
         )
         if ansible_module.params[key] is not None
     }
+    pvlan_type = ansible_module.params["pvlan_type"]
+    pvlan_association = ansible_module.params["pvlan_association"]
     state = ansible_module.params["state"]
     try:
         session = get_pyaoscx_session(ansible_module)
@@ -278,6 +305,20 @@ def main():
         vlan_exists = True
     except Exception:
         vlan_exists = False
+
+    # Validate the referenced primary VLAN exists before making any change so
+    # a secondary VLAN is not created when the association would be rejected.
+    if pvlan_association is not None and state != "delete":
+        primary_vlan = Vlan(session, pvlan_association)
+        try:
+            primary_vlan.get()
+        except Exception:
+            ansible_module.fail_json(
+                msg=(
+                    "Primary VLAN {0} referenced by pvlan_association does "
+                    "not exist".format(pvlan_association)
+                )
+            )
 
     if state == "delete":
         if acl_type:
@@ -351,6 +392,27 @@ def main():
         for attr, value in dhcp_snooping_attrs.items():
             modified |= getattr(vlan, attr, None) != value
             setattr(vlan, attr, value)
+        if pvlan_type is not None:
+            modified |= getattr(vlan, "pvlan_type", None) != pvlan_type
+            vlan.pvlan_type = pvlan_type
+
+        if pvlan_association is not None:
+            primary_uri = "{0}system/vlans/{1}".format(
+                session.resource_prefix, pvlan_association
+            )
+            current = getattr(vlan, "pvlan_association", None)
+            if isinstance(current, dict):
+                current_uri = next(iter(current.values()), None)
+            else:
+                current_uri = current
+            cur_id = (
+                str(current_uri).rstrip("/").rsplit("/", 1)[-1]
+                if current_uri
+                else None
+            )
+            if str(cur_id) != str(pvlan_association):
+                modified = True
+                vlan.pvlan_association = primary_uri
 
         if modified:
             try:
