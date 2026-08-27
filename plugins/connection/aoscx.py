@@ -137,6 +137,9 @@ options:
       Configures REST version, default version is 10.04, but 10.08, 10.09,
       10.13 or 10.16 can be used in a specific host or globaly if it is set
       as an environment variable.
+      10.13 can be used in a specific host or globaly if it is set as an
+      environment variable. REST version 10.13 is required for IPFIX and
+      Traffic Insight modules.
     default: '10.04'
     env:
       - name: ANSIBLE_AOSCX_REST_VERSION
