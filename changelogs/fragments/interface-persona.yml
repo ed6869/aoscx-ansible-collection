@@ -1,0 +1,4 @@
+---
+minor_changes:
+  - New module ``aoscx_interface_persona`` to configure the persona of an
+    AOS-CX interface (access/uplink/custom role, attach/copy mode).
