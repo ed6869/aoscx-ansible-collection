@@ -1,0 +1,4 @@
+---
+minor_changes:
+  - New module ``aoscx_persona`` to create or delete an AOS-CX interface
+    persona definition (the ``interface persona <name>`` template object).
